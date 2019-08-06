@@ -15,23 +15,32 @@ var items = {};
 
 exports.create = (text, callback) => {
   counter.getNextUniqueId((err, data) => {
-    var id = data
-    var newFileName = path.join(exports.dataDir, `./${data}.txt`)
+    var id = data;
+    var newFileName = path.join(exports.dataDir, `./${data}.txt`);
     fs.writeFile(newFileName, text, (err) => {
       if (err) {
-        console.log('error')
+        console.log('error');
       } else {
-        callback(null, { id, text })
+        callback(null, { id, text });
       }
-    })
+    });
   });
 };
 
 exports.readAll = (callback) => {
-  var data = _.map(items, (text, id) => {
-    return { id, text };
+  fs.readdir(exports.dataDir, (err, files) => {
+    if (err) {
+      console.log('error');
+    } else {
+      var data = _.map(files, (file) => {
+        fs.readFile(path.join(exports.dataDir, file), (err, data) => {
+          console.log(data.toString("utf-8", 0, 12))
+          return { id: data.id, text: data.text }
+        })
+      });
+      callback(null, data);
+    }
   });
-  callback(null, data);
 };
 
 exports.readOne = (id, callback) => {
@@ -58,13 +67,13 @@ exports.delete = (id, callback) => {
     for (var i = 0; i < files.length; i++) {
       if (`${id}.txt` === files[i]) {
         fs.unlink(path.join(exports.dataDir, files[i]), (err) => {
-          callback(null)
-        })
+          callback(null);
+        });
       } else {
-        callback(new Error(`No item with id: ${id}`))
+        callback(new Error(`No item with id: ${id}`));
       }
     }
-  })
+  });
 };
 
 // Config+Initialization code -- DO NOT MODIFY /////////////////////////////////

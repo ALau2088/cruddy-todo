@@ -40,7 +40,7 @@ const writeCounter = (count, callback) => {
       callback(null, counterString);
     }
   });
-  return counterString
+  return counterString;
 };
 
 // Public API - Fix this function //////////////////////////////////////////////
@@ -50,7 +50,7 @@ exports.getNextUniqueId = (callback) => {
     if (err) {
       return err;
     } else {
-      writeCounter(counter += 1, callback)
+      writeCounter(counter += 1, callback);
     }
   });
 };
