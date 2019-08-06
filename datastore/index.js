@@ -32,34 +32,80 @@ exports.readAll = (callback) => {
     if (err) {
       console.log('error');
     } else {
-      var data = _.map(files, (file) => {
-        fs.readFile(path.join(exports.dataDir, file), (err, data) => {
-          console.log(data.toString("utf-8", 0, 12))
-          return { id: data.id, text: data.text }
-        })
+      var data = _.map(files, (text) => {
+        return { id: text.slice(0, 5), text: text.slice(0, 5) };
       });
       callback(null, data);
     }
   });
 };
 
+//read the content of the todo item file on server side
+//respond with the text message to the client
 exports.readOne = (id, callback) => {
-  var text = items[id];
-  if (!text) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback(null, { id, text });
-  }
+  fs.readdir(exports.dataDir, (err, files) => {
+    if (err) {
+      callback(err, null);
+    } else {
+      for (var i = 0; i < files.length; i++) {
+        // If file match
+        if (`${id}.txt` === files[i]) {
+          fs.readFile(path.join(exports.dataDir, files[i]), (err, text) => {
+            if (err) {
+              callback(err, null);
+            } else {
+              var todo = { id, text: text.toString() };
+              callback(null, todo);
+            }
+          });
+          return;
+        }
+      }
+      callback(new Error(`No item with id: ${id}`), null);
+    }
+  });
 };
 
 exports.update = (id, text, callback) => {
-  var item = items[id];
-  if (!item) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    items[id] = text;
-    callback(null, { id, text });
-  }
+  fs.readdir(exports.dataDir, (err, files) => {
+    if (err) {
+      callback(new Error('Error reading files in directory'), null);
+    } else if (files.includes(`${id}.txt`)) {
+      for (var i = 0; i < files.length; i++) {
+        if (`${id}.txt` === files[i]) {
+          fs.readFile(path.join(exports.dataDir, files[i]), (err, currentText) => {
+            if (err) {
+              callback(new Error('Error reading file'), null);
+            } else {
+              var updatedText = text.replace(`${currentText.toString()}`, text);
+              fs.writeFile(path.join(exports.dataDir, `${id}.txt`), updatedText, (err) => {
+                if (err) {
+                  callback(new Error('error writing file'), null);
+                } else {
+                  callback(null, updatedText);
+                }
+              });
+            }
+          });
+        }
+      }
+      // callback(new Error('non-existant id'), null)
+    } else {
+      (
+        callback(new Error('non-existant id'), null)
+      );
+    }
+  });
+
+
+  //default below----------------------------------------
+  // var item = items[id];
+  // if (!item) {
+  //   callback(new Error(`No item with id: ${id}`));
+  // } else {
+  //   items[id] = text;
+  //   callback(null, { id, text });
+  // }
 };
 
 exports.delete = (id, callback) => {
