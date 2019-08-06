@@ -15,6 +15,9 @@ const zeroPaddedNumber = (num) => {
   return sprintf('%05d', num);
 };
 
+//reading counterFile and accessing current number
+//Converts buffer to number
+//passing current number to callback, which invokes writeCounter with current number + 1
 const readCounter = (callback) => {
   fs.readFile(exports.counterFile, (err, fileData) => {
     if (err) {
@@ -25,6 +28,9 @@ const readCounter = (callback) => {
   });
 };
 
+//pads increased number that turns it into a string
+//writes to counterFile and updates number with increased padded number string
+//Invokes callback with new padded number
 const writeCounter = (count, callback) => {
   var counterString = zeroPaddedNumber(count);
   fs.writeFile(exports.counterFile, counterString, (err) => {
@@ -34,13 +40,19 @@ const writeCounter = (count, callback) => {
       callback(null, counterString);
     }
   });
+  return counterString
 };
 
 // Public API - Fix this function //////////////////////////////////////////////
-
-exports.getNextUniqueId = () => {
-  counter = counter + 1;
-  return zeroPaddedNumber(counter);
+//passes increment value in callback =
+exports.getNextUniqueId = (callback) => {
+  readCounter((err, counter) => {
+    if (err) {
+      return err;
+    } else {
+      writeCounter(counter += 1, callback)
+    }
+  });
 };
 
 

@@ -7,10 +7,24 @@ var items = {};
 
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
+//must be saved into its own file
+//Use the getNextUniqueId to create a file path inside the dataDir.
+//Each time a POST request is made to the collection route, save a file with the todo item in this folder.
+//Only save todo text in file, id is encoded in filename
+//do not store an object.
+
 exports.create = (text, callback) => {
-  var id = counter.getNextUniqueId();
-  items[id] = text;
-  callback(null, { id, text });
+  counter.getNextUniqueId((err, data) => {
+    var id = data
+    var newFileName = path.join(exports.dataDir, `./${data}.txt`)
+    fs.writeFile(newFileName, text, (err) => {
+      if (err) {
+        console.log('error')
+      } else {
+        callback(null, { id, text })
+      }
+    })
+  });
 };
 
 exports.readAll = (callback) => {
@@ -40,14 +54,17 @@ exports.update = (id, text, callback) => {
 };
 
 exports.delete = (id, callback) => {
-  var item = items[id];
-  delete items[id];
-  if (!item) {
-    // report an error if item not found
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback();
-  }
+  fs.readdir(exports.dataDir, (err, files) => {
+    for (var i = 0; i < files.length; i++) {
+      if (`${id}.txt` === files[i]) {
+        fs.unlink(path.join(exports.dataDir, files[i]), (err) => {
+          callback(null)
+        })
+      } else {
+        callback(new Error(`No item with id: ${id}`))
+      }
+    }
+  })
 };
 
 // Config+Initialization code -- DO NOT MODIFY /////////////////////////////////
